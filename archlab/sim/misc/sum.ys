@@ -1,0 +1,54 @@
+    .pos 0
+    irmovq stack, %rsp
+    rrmovq %rsp, %rbp
+    call main
+    halt
+
+    .align 8
+ele1:
+    .quad 0x00a
+    .quad ele2
+ele2:
+    .quad 0x0b0
+    .quad ele3
+ele3:
+    .quad 0xc00
+    .quad 0
+
+main:
+    pushq %rbp
+    rrmovq %rsp, %rbp
+    irmovq ele1, %rax
+    pushq %rax
+    call sum_list
+    irmovq $8, %rdx
+    addq %rdx, %rsp     # Restore stack. (add esp, 8)
+    rrmovq %rbp, %rsp
+    popq %rbp
+    ret
+
+####################################################################
+sum_list:
+# Calculate the sum of a linked list.
+# Receives: param_1 = ls, the address of the first node.
+# Returns: rax = the sum of every number in the list.
+####################################################################
+    pushq %rbp
+    rrmovq %rsp, %rbp
+    xorq %rax, %rax
+    mrmovq 16(%rbp), %rsi
+    andq %rsi, %rsi
+    je endloop
+loop:
+    mrmovq (%rsi), %rcx
+    addq %rcx, %rax
+    mrmovq 8(%rsi), %rsi
+    andq %rsi, %rsi
+    jne loop
+endloop:
+    rrmovq %rbp, %rsp
+    popq %rbp
+    ret
+
+    .pos 0x200
+stack:

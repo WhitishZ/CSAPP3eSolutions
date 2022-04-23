@@ -1,0 +1,59 @@
+    .pos 0
+    irmovq stack, %rsp
+    rrmovq %rsp, %rbp
+    call main
+    halt
+
+    .align 8
+ele1:
+    .quad 0x00a
+    .quad ele2
+ele2:
+    .quad 0x0b0
+    .quad ele3
+ele3:
+    .quad 0xc00
+    .quad 0
+
+main:
+    pushq %rbp
+    rrmovq %rsp, %rbp
+    irmovq ele1, %rax
+    pushq %rax
+    call rsum_list
+    irmovq $8, %rdx
+    addq %rdx, %rsp
+    rrmovq %rbp, %rsp
+    popq %rbp
+    ret
+
+####################################################################
+rsum_list:
+# Recursively calculate the sum of a linked list.
+# Receives: param_1 = ls, the address of the first node.
+# Returns: rax = the sum of every number in the list.
+####################################################################
+    pushq %rbp
+    rrmovq %rsp, %rbp
+    pushq %rcx              # The only register needs to store is rcx(val in Line 24).
+    mrmovq 16(%rbp), %rsi
+    andq %rsi, %rsi
+    je lastnode
+    mrmovq (%rsi), %rcx
+    mrmovq 8(%rsi), %rsi
+    pushq %rsi
+    call rsum_list
+    irmovq $8, %rdx
+    addq %rdx, %rsp
+    addq %rcx, %rax
+    jmp exit_rsum_list
+lastnode:
+    xorq %rax, %rax
+exit_rsum_list:
+    popq %rcx
+    rrmovq %rbp, %rsp
+    popq %rbp
+    ret
+
+    .pos 0x200
+stack:

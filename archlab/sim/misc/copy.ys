@@ -1,0 +1,67 @@
+    .pos 0
+    irmovq stack, %rsp
+    rrmovq %rsp, %rbp
+    call main
+    halt
+
+    .align 8
+# Source block
+src:
+    .quad 0x00a
+    .quad 0x0b0
+    .quad 0xc00
+# Destination block
+dest:
+    .quad 0x111
+    .quad 0x222
+    .quad 0x333
+
+main:
+    pushq %rbp
+    rrmovq %rsp, %rbp
+    irmovq $3, %rcx
+    irmovq dest, %rdi
+    irmovq src, %rsi
+    pushq %rcx
+    pushq %rdi
+    pushq %rsi
+    call copy_block
+    irmovq $24, %rdx
+    addq %rdx, %rsp
+    rrmovq %rbp, %rsp
+    popq %rbp
+    ret
+
+####################################################################
+copy_block:
+# Copy src to dest and return xor checksum of src.
+# Receives: param_1 = src, the address of the source.
+#           param_2 = dest, the address of the destination.
+#           param_3 = len, the length of the memory block to copy.
+# Returns: rax = the xor checksum of src.
+####################################################################
+    pushq %rbp
+    rrmovq %rsp, %rbp
+    mrmovq 16(%rbp), %rsi
+    mrmovq 24(%rbp), %rdi
+    mrmovq 32(%rbp), %rcx
+    xorq %rax, %rax
+    andq %rcx, %rcx
+    jle endloop
+loop:
+    mrmovq (%rsi), %rdx
+    irmovq $8, %rbx
+    addq %rbx, %rsi
+    rmmovq %rdx, (%rdi)
+    addq %rbx, %rdi
+    xorq %rdx, %rax
+    irmovq $1, %rbx
+    subq %rbx, %rcx
+    jne loop
+endloop:
+    rrmovq %rbp, %rsp
+    popq %rbp
+    ret
+
+    .pos 0x200
+stack:
